@@ -21,7 +21,12 @@ bmr = pec_mb*part_rate*1e-4
 
 ```{r}
 #Alex's contribution: creating BMR formula
-df1 <- df %>% select(1:4) %>% rename(`2012` = t_takes2012, `2013` = t_takes2013) %>% gather(3,4,key = "year", value = "t_takes")
+#Create a new column called year and test-takers for that year.
+df1 <- df %>% 
+  select(1:4) %>% 
+  rename(`2012` = t_takes2012, `2013` = t_takes2013) %>% 
+  gather(3,4,key = "year", value = "t_takes") %>% 
+  arrange(school)
 df1
 df2 <- df %>% select(1,2,5,6) %>% rename(`2012` = part_rate2012, `2013` = part_rate2013) %>% gather(3,4,key = "year", value = "part_rate")
 df2
