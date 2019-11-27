@@ -44,11 +44,65 @@ df3 <- df %>%
 df4 <- df1 %>% 
   full_join(df2,by = c("district","school","year")) %>% 
   full_join(df3,by = c("district","school","year"))
-
 df4 <- df4 %>% 
   mutate(bmr = perc_mb*part_rate*1e-4)
-df4
 
+df4
 ```
+
+
+
+First we'll get the senior population for each school (denoted as pop)
+```{r}
+data <- df4 %>% mutate(pop = floor(1e2*t_takes / part_rate))
+```
+
+Now lets plot it
+```{r}
+ggplot(data) + 
+  geom_point(aes(pop,bmr),alpha=3/5) + 
+  facet_wrap(~year)
+```
+
+
+The data is relatively scattered, but we can see a weak positive linear trend.
+
+Let's use mean-square residuals
+```{r}
+#mean-square residuals
+measure_distance <- function(mod,data){
+  diff <- data$bmr - (mod[1] + data$pop*mod[2])
+  sqrt(mean(diff^2))
+}
+
+best <- optim(c(0, 0), measure_distance, data = data)
+
+ggplot(data, aes(pop, bmr)) + 
+  geom_point(size = 2, colour = "grey30") + 
+  geom_abline(color="blue",intercept = best$par[1], slope = best$par[2])
+```
+
+
+```{r}
+mod1 <- lm(bmr ~ ns(pop, 1), data = data)
+mod2 <- lm(bmr ~ ns(pop, 2), data = data)
+mod3 <- lm(bmr ~ ns(pop, 3), data = data)
+mod4 <- lm(bmr ~ ns(pop, 4), data = data)
+
+data %>% 
+  gather_predictions(mod1, mod2, mod3, mod4) %>%
+  ggplot(aes(pop, bmr)) + 
+  geom_point() +
+  geom_line(aes(pop,pred), colour = "red") +
+  facet_grid(year~ model)
+```
+
+
+
+
+
+
+
+
 
 
