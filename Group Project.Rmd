@@ -16,24 +16,37 @@ df
 
 
 bmr = number of meeting Benchmark / number of total seniors = (t_takes*perc_mb) / (t_takes/part_rate) = pec_mb*part_rate
-Because in the dataset, both perc_mb and part_rate use % as unit, the formula has been changed to :
-bmr = pec_mb*part_rate*1e-4
+bmr = perc_mb*part_rate*0.0001
+
+We use bmr because it's a better measurement for comparing how well schools do. If 2 schools have the same percentage meeting benchmark, but one of them has a higher participation rate then the one with the higher participation rate is the better school.
 
 ```{r}
 #Alex's contribution: creating BMR formula
-#Create a new column called year and test-takers for that year.
+#df1 is for testtakers for each school+year
 df1 <- df %>% 
   select(1:4) %>% 
   rename(`2012` = t_takes2012, `2013` = t_takes2013) %>% 
   gather(3,4,key = "year", value = "t_takes") %>% 
   arrange(school)
-df1
-df2 <- df %>% select(1,2,5,6) %>% rename(`2012` = part_rate2012, `2013` = part_rate2013) %>% gather(3,4,key = "year", value = "part_rate")
-df2
-df3 <- df %>% select(1,2,7,8) %>% rename(`2012` = perc_mb2012, `2013` = perc_mb2013) %>% gather(3,4,key = "year", value = "perc_mb")
-df3
-df4 <- df1 %>% full_join(df2,by = c("district","school","year")) %>% full_join(df3,by = c("district","school","year"))
-df4 <- df4 %>% mutate(bmr = perc_mb*part_rate*1e-4)
+
+#df2 is participation rate for each school+year
+df2 <- df %>% select(1,2,5,6) %>% 
+  rename(`2012` = part_rate2012, `2013` = part_rate2013) %>% 
+  gather(3,4,key = "year", value = "part_rate")
+
+#df3 is percentage meeting benchmark for each school+year
+df3 <- df %>% 
+  select(1,2,7,8) %>% 
+  rename(`2012` = perc_mb2012, `2013` = perc_mb2013) %>% 
+  gather(3,4,key = "year", value = "perc_mb")
+
+#df4 combines them all
+df4 <- df1 %>% 
+  full_join(df2,by = c("district","school","year")) %>% 
+  full_join(df3,by = c("district","school","year"))
+
+df4 <- df4 %>% 
+  mutate(bmr = perc_mb*part_rate*1e-4)
 df4
 
 ```
