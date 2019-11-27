@@ -61,7 +61,8 @@ Now lets plot it
 ```{r}
 ggplot(data) + 
   geom_point(aes(pop,bmr),alpha=3/5) + 
-  facet_wrap(~year)
+  facet_wrap(~year) + 
+  theme_bw()
 ```
 
 
@@ -79,28 +80,48 @@ best <- optim(c(0, 0), measure_distance, data = data)
 
 ggplot(data, aes(pop, bmr)) + 
   geom_point(size = 2, colour = "grey30") + 
-  geom_abline(color="blue",intercept = best$par[1], slope = best$par[2])
+  geom_abline(color="blue",intercept = best$par[1], slope = best$par[2]) + 
+  theme_bw()
 ```
 
 
 ```{r}
 mod1 <- lm(bmr ~ ns(pop, 1), data = data)
 mod2 <- lm(bmr ~ ns(pop, 2), data = data)
-mod3 <- lm(bmr ~ ns(pop, 3), data = data)
-mod4 <- lm(bmr ~ ns(pop, 4), data = data)
+mod3 <- lm(bmr ~ log(pop, base = exp(1)), data = data)
+mod4 <- lm(bmr ~ I(pop^2), data = data)
 
 data %>% 
   gather_predictions(mod1, mod2, mod3, mod4) %>%
   ggplot(aes(pop, bmr)) + 
-  geom_point() +
+  geom_point(alpha=2/5) +
   geom_line(aes(pop,pred), colour = "red") +
-  facet_grid(year~ model)
+  facet_grid(year~ model) + 
+  theme_bw()
 ```
 
+Let's check the residuals for any patterns
+```{r}
+data %>%
+  gather_residuals(mod1,mod2,mod3,mod4) %>%
+  ggplot(aes(resid)) + 
+  geom_freqpoly(binwidth = 0.05) + 
+  geom_vline(xintercept = 0, colour = "Green", size=0.5) + 
+  facet_grid(year ~ model)
+```
 
+Looks approximately normal for all.
 
+```{r}
+data %>%
+  gather_residuals(mod1,mod2,mod3,mod4) %>%
+  ggplot(aes(pop, resid)) + 
+  geom_hline(yintercept = 0, colour = "white", size = 2) + 
+  geom_point(alpha=2/5) + 
+  facet_grid(year ~ model)
+```
 
-
+Coefficient of Determination (r^2)
 
 
 
