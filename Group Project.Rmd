@@ -54,8 +54,6 @@ df4 <- df1 %>%
   full_join(df3,by = c("district","school","year"))
 df4 <- df4 %>% 
   mutate(bmr = perc_mb*part_rate*1e-4)
-
-df4
 ```
 
 
@@ -63,6 +61,7 @@ df4
 First we'll get the senior population for each school (denoted as pop)
 ```{r}
 data <- df4 %>% mutate(pop = floor(1e2*t_takes / part_rate))
+data
 ```
 
 Now lets plot it
