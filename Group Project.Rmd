@@ -1,10 +1,10 @@
 ---
 title: "R Notebook"
 output:
+  pdf_document: default
+  html_notebook: default
   html_document:
     df_print: paged
-  html_notebook: default
-  pdf_document: default
 ---
 ```{r echo=FALSE, results="hide"}
 library(splines)
@@ -71,9 +71,10 @@ data
 Now lets plot it
 ```{r}
 ggplot(data) + 
-  geom_point(aes(pop,bmr),alpha=3/5) + 
+  geom_point(aes(pop,bmr),alpha=2/5,size=3.5) + 
   facet_wrap(~year) + 
-  theme_bw()
+  theme_bw() + 
+  labs(title="Senior Population vs Benchmark Meeting Rate",caption="This shows the population vs bmr for each year.")
 ```
 
 
