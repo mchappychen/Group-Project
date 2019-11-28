@@ -165,7 +165,8 @@ ggplot(pr2013_highest) +
 coord_flip()
 ```
 
-
+Conclusion
+According to the graphs, we removed all the bull values in oth 2012 and 2013from data of SAT School Participation and Performance informations in Connecticut state， there are around 170 schools remaining. From the graph of compare to population and BMR, we find that students number in most school is less than 300, and most of them lower than 0.5 BMR. Population of 2013 increase a little bit than 2012, but it did not show big change overall. There are 3 schools from three districts have the highest BMR in both years, which is "Darien High School", "New canaan High School" and "Wilton High School". All three school have student scale around 300. We concluded that in the state of Connecticut, student scale around 300 can make best Benchmark Performance.
 
 
 
