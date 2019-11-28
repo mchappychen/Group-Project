@@ -23,7 +23,7 @@ df
 ```
 
 
-Introduction
+## Introduction
 In this project, the dataset provides Benchmark Meeting and participation rate, but it did not show what exactly how many people reach the Benchmark in that year, and the Percent Meeting Benchmark of the total number of test takers. Therefore, we created a  new index call BMR(Benchmark Meeting Rate),we find all the seniors in a school fist, then calculate BMR through Benchmark-meeting seniors divided by the number of total seniors. We use BMR to evaluate the quality of education in the districts. This report we will analyze the distribution of Benchmark Performance in 2012 and 2013.
 
 bmr = number of meeting Benchmark / number of total seniors = (t_takes*perc_mb) / (t_takes/part_rate) = pec_mb*part_rate
@@ -31,6 +31,8 @@ bmr = perc_mb*part_rate*0.0001
 
 
 We use bmr because it's a better measurement for comparing how well schools do. If 2 schools have the same percentage meeting benchmark, but one of them has a higher participation rate then the one with the higher participation rate is the better school.
+
+## Questions and Findings
 
 ```{r}
 #Alex's contribution: creating BMR formula
@@ -165,7 +167,7 @@ ggplot(pr2013_highest) +
 coord_flip()
 ```
 
-Conclusion
+## Conclusion
 According to the graphs, we removed all the bull values in oth 2012 and 2013from data of SAT School Participation and Performance informations in Connecticut state， there are around 170 schools remaining. From the graph of compare to population and BMR, we find that students number in most school is less than 300, and most of them lower than 0.5 BMR. Population of 2013 increase a little bit than 2012, but it did not show big change overall. There are 3 schools from three districts have the highest BMR in both years, which is "Darien High School", "New canaan High School" and "Wilton High School". All three school have student scale around 300. We concluded that in the state of Connecticut, student scale around 300 can make best Benchmark Performance.
 
 
