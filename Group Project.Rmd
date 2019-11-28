@@ -1,7 +1,13 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
+```{r echo=FALSE, results="hide"}
+library(splines)
+library(modelr)
+```
 
 ```{r}
 data <- read_csv("SAT_School_Participation_and_Performance__2012-2013.csv")
@@ -123,6 +129,33 @@ data %>%
 
 Coefficient of Determination (r^2)
 
+```{r}
+summary(mod1)$r.squared
+summary(mod2)$r.squared
+summary(mod3)$r.squared
+summary(mod4)$r.squared
+```
+
+These coefficients SUCK
+
+
+What if I repeated something with districts that have more than 5 schools
+```{r}
+popularDistrict <- data %>%
+  group_by(district) %>%
+  summarize(n=n()) %>%
+  dplyr::filter(n>10) %>%
+  left_join(data,by="district") %>%
+  select(-n)
+popularDistrict
+```
+
+```{r}
+ggplot(popularDistrict) +
+  geom_point(aes(pop,bmr,color=district),alpha=3/5) + 
+  facet_grid(district~year) + 
+  theme_bw()
+```
 
 
 
