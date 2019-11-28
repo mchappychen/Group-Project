@@ -16,7 +16,6 @@ data <- read_csv("SAT_School_Participation_and_Performance__2012-2013.csv")
 ```
 
 ```{r}
-#Alex's contribution: Tidying up the data
 df <- data %>% select(-1, -6, -9, -12) %>% rename(district = "District", school = "School", t_takes2012 = "Test-takers: 2012", t_takes2013 = "Test-takers: 2013", part_rate2012 = "Participation Rate (estimate): 2012", part_rate2013 = "Participation Rate (estimate): 2013", perc_mb2012 = "Percent Meeting Benchmark: 2012", perc_mb2013 = "Percent Meeting Benchmark: 2013")
 df <- df %>% dplyr::filter(!(is.na(t_takes2012) | is.na(t_takes2013) | is.na(part_rate2012) | is.na(part_rate2013) | is.na(perc_mb2012) | is.na(perc_mb2013)))
 df
@@ -26,14 +25,21 @@ df
 ## Introduction
 In this project, the dataset provides Benchmark Meeting and participation rate, but it did not show what exactly how many people reach the Benchmark in that year, and the Percent Meeting Benchmark of the total number of test takers. Therefore, we created a  new index call BMR(Benchmark Meeting Rate),we find all the seniors in a school fist, then calculate BMR through Benchmark-meeting seniors divided by the number of total seniors. We use BMR to evaluate the quality of education in the districts. This report we will analyze the distribution of Benchmark Performance in 2012 and 2013.
 
-bmr = number of meeting Benchmark / number of total seniors = (t_takes*perc_mb) / (t_takes/part_rate) = pec_mb*part_rate
-bmr = perc_mb*part_rate*0.0001
+BMR is calculated as such:
+
+bmr = number of meeting Benchmark / number of total seniors 
+
+= (t_takes*perc_mb) / (t_takes/part_rate) 
+
+= pec_mb*part_rate
 
 
 We use bmr because it's a better measurement for comparing how well schools do. If 2 schools have the same percentage meeting benchmark, but one of them has a higher participation rate then the one with the higher participation rate is the better school.
 
-## Questions and Findings
 
+
+## Questions and Findings
+### What is the relationship between a school's senior population and the school's benchmark-meeting rate?
 ```{r}
 #Alex's contribution: creating BMR formula
 #df1 is for testtakers for each school+year
@@ -65,15 +71,17 @@ df4 <- df4 %>%
 
 
 First we'll get the senior population for each school (denoted as pop)
+
 ```{r}
 data <- df4 %>% mutate(pop = floor(1e2*t_takes / part_rate))
 data
 ```
 
-Now lets plot it
+We'll plot the data to see if we can recognize any patterns.
+
 ```{r}
 ggplot(data) + 
-  geom_point(aes(pop,bmr),alpha=2/5,size=3.5) + 
+  geom_point(aes(pop,bmr),alpha=3/7,size=3) + 
   facet_wrap(~year) + 
   theme_bw() + 
   labs(title="Senior Population vs Benchmark Meeting Rate",caption="This shows the population vs bmr for each year.")
@@ -82,7 +90,8 @@ ggplot(data) +
 
 The data is relatively scattered, but we can see a weak positive linear trend.
 
-Let's use mean-square residuals
+We can create a linear model using root mean squared residuals.
+
 ```{r}
 #mean-square residuals
 measure_distance <- function(mod,data){
@@ -97,6 +106,9 @@ ggplot(data, aes(pop, bmr)) +
   geom_abline(color="blue",intercept = best$par[1], slope = best$par[2]) + 
   theme_bw()
 ```
+
+However, there's still many points in the data that are far from our linear model.
+Let's try out some nonlinear models to see if it can fit the data any better.
 
 
 ```{r}
@@ -114,17 +126,20 @@ data %>%
   theme_bw()
 ```
 
-Let's check the residuals for any patterns
+None of these models appear very satisfactory since many data points are still ommitted. But we can't conclude that a model isn't good just by appearance, we also have to examine other factors of the models to check how good it is.
+Let's check the residuals for any patterns.
+
 ```{r}
 data %>%
   gather_residuals(mod1,mod2,mod3,mod4) %>%
   ggplot(aes(resid)) + 
   geom_freqpoly(binwidth = 0.05) + 
   geom_vline(xintercept = 0, colour = "Green", size=0.5) + 
-  facet_grid(year ~ model)
+  facet_grid(year ~ model) + 
+  theme_bw()
 ```
 
-Looks approximately normal for all.
+Except the first model, all the other residuals have an approximately normal distribution around 0, which is good.
 
 ```{r}
 data %>%
@@ -132,46 +147,54 @@ data %>%
   ggplot(aes(pop, resid)) + 
   geom_hline(yintercept = 0, colour = "white", size = 2) + 
   geom_point(alpha=2/5) + 
-  facet_grid(year ~ model)
+  facet_grid(year ~ model) + 
+  theme_bw()
 ```
 
-Coefficient of Determination (r^2)
+There appears to be no pattern in our residual plot for all of the models, which is also a good thing.
+The last thing we need to check is the coefficient of determination.
 
 ```{r}
-summary(mod1)$r.squared
-summary(mod2)$r.squared
-summary(mod3)$r.squared
-summary(mod4)$r.squared
+print(str_c("r^2 of 1-degree of freedom cubic spline model: ", round(summary(mod1)$r.squared,3)  ))
+print(str_c("r^2 of 2-degrees of freedom cubic spline model: ", round(summary(mod2)$r.squared,3)  ))
+print(str_c("r^2 of logarithmic model: ", round(summary(mod3)$r.squared,3)  ))
+print(str_c("r^2 of 2nd-degree polynomial model: ", round(summary(mod4)$r.squared,3)  ))
 ```
 
-These coefficients SUCK
+These coefficients are pretty low overall, which isn't good. The model with highest coefficient of determination is mod2, the 2-degrees of freedom cubic spline model, so this is the best model we have. 
+When predicting a school's benchmark meeting rate based on its population, we can use this model, and be correct about 13.8% of the time.
 
+### Which districts have the highest participation rates?
 We find the highest participation rate of 2012 and 2013.
+
 ```{r}
 pr2012_highest <- data %>%
     dplyr::filter(part_rate ==100, year == 2012) %>%
     select(district) 
 ggplot(pr2012_highest) +
   geom_bar(aes(district))+
-coord_flip()
+coord_flip() + 
+  theme_bw() + 
+  labs(title="Districts with the highest participation rates in 2012")
 ```
 
 ```{r}
-
 pr2013_highest <- data %>%
     dplyr::filter(part_rate == 100, year == 2013) %>%
     select(district) 
 
 ggplot(pr2013_highest) +
-  geom_bar(aes(district))+
-coord_flip()
+  geom_bar(aes(district)) +
+  coord_flip() + 
+  theme_bw() +
+  labs(title="Districts with the highest participation rate in 2013")
 ```
 
 ## Conclusion
 According to the graphs, we removed all the bull values in oth 2012 and 2013from data of SAT School Participation and Performance informations in Connecticut state， there are around 170 schools remaining. From the graph of compare to population and BMR, we find that students number in most school is less than 300, and most of them lower than 0.5 BMR. Population of 2013 increase a little bit than 2012, but it did not show big change overall. There are 3 schools from three districts have the highest BMR in both years, which is "Darien High School", "New canaan High School" and "Wilton High School". All three school have student scale around 300. We concluded that in the state of Connecticut, student scale around 300 can make best Benchmark Performance.
 
 ## Contributions
-Alex - Created the formula for BMR, came up with the ideas on what to explain from our model.
-Michael - Michael created the models for the graphs of senior population vs bmr, the residual plots,
-Hongyang - Wrote the Introduction and Conlcusion, added the graphs for the highest participation rates.
+Alex - Created the formula for BMR, came up with the ideas on what to explain from our model, tidied the data frame, and proofread the project for any errors.
+Michael - Michael created the models for the graphs of senior population vs bmr, analyzed each model, and made the plots look pretty.
+Hongyang - Wrote the Introduction and Conlcusion, added the graphs for the districts with the highest participation rates.
 
