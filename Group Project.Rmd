@@ -1,23 +1,26 @@
 ---
 title: "R Notebook"
 output:
-  pdf_document: default
-  html_notebook: default
   html_document:
     df_print: paged
+  html_notebook: default
+  pdf_document: default
 ---
 ```{r echo=FALSE, results="hide"}
 library(splines)
 library(modelr)
 ```
 
-```{r}
+```{r info=FALSE}
 data <- read_csv("SAT_School_Participation_and_Performance__2012-2013.csv")
 ```
 
 ```{r}
-df <- data %>% select(-1, -6, -9, -12) %>% rename(district = "District", school = "School", t_takes2012 = "Test-takers: 2012", t_takes2013 = "Test-takers: 2013", part_rate2012 = "Participation Rate (estimate): 2012", part_rate2013 = "Participation Rate (estimate): 2013", perc_mb2012 = "Percent Meeting Benchmark: 2012", perc_mb2013 = "Percent Meeting Benchmark: 2013")
-df <- df %>% dplyr::filter(!(is.na(t_takes2012) | is.na(t_takes2013) | is.na(part_rate2012) | is.na(part_rate2013) | is.na(perc_mb2012) | is.na(perc_mb2013)))
+df <- data %>% 
+  select(-1, -6, -9, -12) %>% 
+  rename(district = "District", school = "School", t_takes2012 = "Test-takers: 2012", t_takes2013 = "Test-takers: 2013", part_rate2012 = "Participation Rate (estimate): 2012", part_rate2013 = "Participation Rate (estimate): 2013", perc_mb2012 = "Percent Meeting Benchmark: 2012", perc_mb2013 = "Percent Meeting Benchmark: 2013")
+df <- df %>% 
+  dplyr::filter(!(is.na(t_takes2012) | is.na(t_takes2013) | is.na(part_rate2012) | is.na(part_rate2013) | is.na(perc_mb2012) | is.na(perc_mb2013)))
 ```
 
 
@@ -211,6 +214,8 @@ According to the graphs, we removed all the bull values in oth 2012 and 2013from
 
 ## Contributions
 Alex - Created the formula for BMR, came up with the ideas on what to explain from our model, tidied the data frame, and proofread the project for any errors.
+
 Michael - Created the models, analyzed each model, and made the plots look pretty.
+
 Hongyang - Wrote the Introduction, the Conlcusion, and added the graphs for the schools with the highest bmr.
 
