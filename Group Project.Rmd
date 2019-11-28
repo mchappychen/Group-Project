@@ -142,40 +142,23 @@ These coefficients SUCK
 
 We find the highest participation rate of 2012 and 2013.
 ```{r}
-pr2012_highest <- sat %>%
-    filter(part_rate ==100, year == 2012) %>%
-    select(District) 
+pr2012_highest <- data %>%
+    dplyr::filter(part_rate ==100, year == 2012) %>%
+    select(district) 
 ggplot(pr2012_highest) +
-  geom_bar(aes(District))+
+  geom_bar(aes(district))+
 coord_flip()
 ```
 
 ```{r}
-pr2013_highest <- sat %>%
-    filter(Part_rate_2013 == 100, year == 2013) %>%
-    select(District) 
+pr2013_highest <- data %>%
+    dplyr::filter(part_rate == 100, year == 2013) %>%
+    select(district) 
 ggplot(pr2013_highest) +
-  geom_bar(aes(District))+
+  geom_bar(aes(district))+
 coord_flip()
 ```
 
-What if I repeated something with districts that have more than 5 schools
-```{r}
-popularDistrict <- data %>%
-  group_by(district) %>%
-  summarize(n=n()) %>%
-  dplyr::filter(n>10) %>%
-  left_join(data,by="district") %>%
-  select(-n)
-popularDistrict
-```
-
-```{r}
-ggplot(popularDistrict) +
-  geom_point(aes(pop,bmr,color=district),alpha=3/5) + 
-  facet_grid(district~year) + 
-  theme_bw()
-```
 
 
 
