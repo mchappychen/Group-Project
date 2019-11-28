@@ -11,18 +11,6 @@ library(splines)
 library(modelr)
 ```
 
-```{r info=FALSE}
-data <- read_csv("SAT_School_Participation_and_Performance__2012-2013.csv")
-```
-
-```{r}
-df <- data %>% 
-  select(-1, -6, -9, -12) %>% 
-  rename(district = "District", school = "School", t_takes2012 = "Test-takers: 2012", t_takes2013 = "Test-takers: 2013", part_rate2012 = "Participation Rate (estimate): 2012", part_rate2013 = "Participation Rate (estimate): 2013", perc_mb2012 = "Percent Meeting Benchmark: 2012", perc_mb2013 = "Percent Meeting Benchmark: 2013")
-df <- df %>% 
-  dplyr::filter(!(is.na(t_takes2012) | is.na(t_takes2013) | is.na(part_rate2012) | is.na(part_rate2013) | is.na(perc_mb2012) | is.na(perc_mb2013)))
-```
-
 
 ## Introduction
 In this project, the dataset provides Benchmark Meeting and participation rate, but it did not show what exactly how many people reach the Benchmark in that year, and the Percent Meeting Benchmark of the total number of test takers. Therefore, we created a  new index call BMR(Benchmark Meeting Rate),we find all the seniors in a school fist, then calculate BMR through Benchmark-meeting seniors divided by the number of total seniors. We use BMR to evaluate the quality of education in the districts. This report we will analyze the distribution of Benchmark Performance in 2012 and 2013.
@@ -42,6 +30,19 @@ We use bmr because it's a better measurement for comparing how well schools do. 
 
 ## Questions and Findings
 ### What is the relationship between a school's senior population and the school's benchmark-meeting rate?
+
+```{r info=FALSE}
+data <- read_csv("SAT_School_Participation_and_Performance__2012-2013.csv")
+```
+
+```{r}
+df <- data %>% 
+  select(-1, -6, -9, -12) %>% 
+  rename(district = "District", school = "School", t_takes2012 = "Test-takers: 2012", t_takes2013 = "Test-takers: 2013", part_rate2012 = "Participation Rate (estimate): 2012", part_rate2013 = "Participation Rate (estimate): 2013", perc_mb2012 = "Percent Meeting Benchmark: 2012", perc_mb2013 = "Percent Meeting Benchmark: 2013")
+df <- df %>% 
+  dplyr::filter(!(is.na(t_takes2012) | is.na(t_takes2013) | is.na(part_rate2012) | is.na(part_rate2013) | is.na(perc_mb2012) | is.na(perc_mb2013)))
+```
+
 
 ```{r}
 #df1 is for testtakers for each school+year
@@ -210,7 +211,7 @@ ggplot() +
 We can see that they fall around the 300-330 population range.
 
 ## Conclusion
-According to the graphs, we removed all the bull values in oth 2012 and 2013from data of SAT School Participation and Performance informations in Connecticut state， there are around 170 schools remaining. From the graph of compare to population and BMR, we find that students number in most school is less than 300, and most of them lower than 0.5 BMR. Population of 2013 increase a little bit than 2012, but it did not show big change overall. There are 3 schools from three districts have the highest BMR in both years, which is "Darien High School", "New canaan High School" and "Wilton High School". All three school have student scale around 300. We concluded that in the state of Connecticut, student scale around 300 can make best Benchmark Performance.
+According to the graphs, we removed all the bull values in oth 2012 and 2013from data of SAT School Participation and Performance informations in Connecticut state, there are around 170 schools remaining. From the graph of compare to population and BMR, we find that students number in most school is less than 300, and most of them lower than 0.5 BMR. Population of 2013 increase a little bit than 2012, but it did not show big change overall. There are 3 schools from three districts have the highest BMR in both years, which is "Darien High School", "New canaan High School" and "Wilton High School". All three school have student scale around 300. We concluded that in the state of Connecticut, student scale around 300 can make best Benchmark Performance.
 
 ## Contributions
 Alex - Created the formula for BMR, came up with the ideas on what to explain from our model, tidied the data frame, and proofread the project for any errors.

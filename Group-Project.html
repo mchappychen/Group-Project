@@ -1637,6 +1637,19 @@ summary {
 </div>
 
 
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>In this project, the dataset provides Benchmark Meeting and participation rate, but it did not show what exactly how many people reach the Benchmark in that year, and the Percent Meeting Benchmark of the total number of test takers. Therefore, we created a new index call BMR(Benchmark Meeting Rate),we find all the seniors in a school fist, then calculate BMR through Benchmark-meeting seniors divided by the number of total seniors. We use BMR to evaluate the quality of education in the districts. This report we will analyze the distribution of Benchmark Performance in 2012 and 2013.</p>
+<p>BMR is calculated as such:</p>
+<p>bmr = number of meeting Benchmark / number of total seniors</p>
+<p>= (t_takes*perc_mb) / (t_takes/part_rate)</p>
+<p>= pec_mb*part_rate</p>
+<p>We use bmr because it’s a better measurement for comparing how well schools do. If 2 schools have the same percentage meeting benchmark, but one of them has a higher participation rate then the one with the higher participation rate is the better school.</p>
+</div>
+<div id="questions-and-findings" class="section level2">
+<h2>Questions and Findings</h2>
+<div id="what-is-the-relationship-between-a-schools-senior-population-and-the-schools-benchmark-meeting-rate" class="section level3">
+<h3>What is the relationship between a school’s senior population and the school’s benchmark-meeting rate?</h3>
 <pre class="r"><code>data &lt;- read_csv(&quot;SAT_School_Participation_and_Performance__2012-2013.csv&quot;)</code></pre>
 <pre><code>## Parsed with column specification:
 ## cols(
@@ -1658,19 +1671,6 @@ summary {
   rename(district = &quot;District&quot;, school = &quot;School&quot;, t_takes2012 = &quot;Test-takers: 2012&quot;, t_takes2013 = &quot;Test-takers: 2013&quot;, part_rate2012 = &quot;Participation Rate (estimate): 2012&quot;, part_rate2013 = &quot;Participation Rate (estimate): 2013&quot;, perc_mb2012 = &quot;Percent Meeting Benchmark: 2012&quot;, perc_mb2013 = &quot;Percent Meeting Benchmark: 2013&quot;)
 df &lt;- df %&gt;% 
   dplyr::filter(!(is.na(t_takes2012) | is.na(t_takes2013) | is.na(part_rate2012) | is.na(part_rate2013) | is.na(perc_mb2012) | is.na(perc_mb2013)))</code></pre>
-<div id="introduction" class="section level2">
-<h2>Introduction</h2>
-<p>In this project, the dataset provides Benchmark Meeting and participation rate, but it did not show what exactly how many people reach the Benchmark in that year, and the Percent Meeting Benchmark of the total number of test takers. Therefore, we created a new index call BMR(Benchmark Meeting Rate),we find all the seniors in a school fist, then calculate BMR through Benchmark-meeting seniors divided by the number of total seniors. We use BMR to evaluate the quality of education in the districts. This report we will analyze the distribution of Benchmark Performance in 2012 and 2013.</p>
-<p>BMR is calculated as such:</p>
-<p>bmr = number of meeting Benchmark / number of total seniors</p>
-<p>= (t_takes*perc_mb) / (t_takes/part_rate)</p>
-<p>= pec_mb*part_rate</p>
-<p>We use bmr because it’s a better measurement for comparing how well schools do. If 2 schools have the same percentage meeting benchmark, but one of them has a higher participation rate then the one with the higher participation rate is the better school.</p>
-</div>
-<div id="questions-and-findings" class="section level2">
-<h2>Questions and Findings</h2>
-<div id="what-is-the-relationship-between-a-schools-senior-population-and-the-schools-benchmark-meeting-rate" class="section level3">
-<h3>What is the relationship between a school’s senior population and the school’s benchmark-meeting rate?</h3>
 <pre class="r"><code>#df1 is for testtakers for each school+year
 df1 &lt;- df %&gt;% 
   select(1:4) %&gt;% 
@@ -1807,7 +1807,7 @@ ggplot() +
 </div>
 <div id="conclusion" class="section level2">
 <h2>Conclusion</h2>
-<p>According to the graphs, we removed all the bull values in oth 2012 and 2013from data of SAT School Participation and Performance informations in Connecticut state， there are around 170 schools remaining. From the graph of compare to population and BMR, we find that students number in most school is less than 300, and most of them lower than 0.5 BMR. Population of 2013 increase a little bit than 2012, but it did not show big change overall. There are 3 schools from three districts have the highest BMR in both years, which is “Darien High School”, “New canaan High School” and “Wilton High School”. All three school have student scale around 300. We concluded that in the state of Connecticut, student scale around 300 can make best Benchmark Performance.</p>
+<p>According to the graphs, we removed all the bull values in oth 2012 and 2013from data of SAT School Participation and Performance informations in Connecticut state, there are around 170 schools remaining. From the graph of compare to population and BMR, we find that students number in most school is less than 300, and most of them lower than 0.5 BMR. Population of 2013 increase a little bit than 2012, but it did not show big change overall. There are 3 schools from three districts have the highest BMR in both years, which is “Darien High School”, “New canaan High School” and “Wilton High School”. All three school have student scale around 300. We concluded that in the state of Connecticut, student scale around 300 can make best Benchmark Performance.</p>
 </div>
 <div id="contributions" class="section level2">
 <h2>Contributions</h2>
