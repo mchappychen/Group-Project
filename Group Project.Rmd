@@ -152,7 +152,7 @@ coord_flip()
 
 ```{r}
 pr2013_highest <- sat %>%
-    filter(Part_rate_2013 == 100, year == 2013) %>%
+    filter(Part_rate == 100, year == 2013) %>%
     select(District) 
 ggplot(pr2013_highest) +
   geom_bar(aes(District))+
