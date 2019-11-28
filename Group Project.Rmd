@@ -151,7 +151,7 @@ Except the first model, all the other residuals have an approximately normal dis
 data %>%
   gather_residuals(mod1,mod2,mod3,mod4) %>%
   ggplot(aes(pop, resid)) + 
-  geom_hline(yintercept = 0, colour = "white", size = 2) + 
+  geom_hline(yintercept = 0, colour = "green", size = 2) + 
   geom_point(alpha=2/5) + 
   facet_grid(year ~ model) + 
   theme_bw() + 
