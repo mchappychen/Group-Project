@@ -1,0 +1,101 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r}
+library(tinytex)
+
+library(tidyverse)
+sat <- read_csv("D:\\Rrad\\SAT_School_Participation_and_Performance__2012-2013.csv", col_names = c
+("District_Number","District","School","Test_takers_2012","Test_takers_2013","Test_takers_Change","Participation_Rate_2012","Participation_Rate_2013","Partic
+ipation_Rate_Change","Percent_Meeting_Benchmark_2012","Percent_Meeting_Benchmark_2013","Percent_Meeting_Benchmark_Change"))
+```
+
+Introduction
+Give 3 questions and make graphs for each of them. There are 200 schools and data from 2 years. I focus on rate change of the 2 years, and relationsip between rate change and test takers change.
+
+
+Questions
+
+1.Which district have participation rate lower than 50%？
+
+```{r}
+pr2012_low <- sat %>%
+    filter(Participation_Rate_2012<50) %>%
+    select(District,Participation_Rate_2012) %>%
+    arrange(District)
+ggplot(pr2012_low) +
+  geom_point(aes(Participation_Rate_2012,District))
+
+```
+
+```{r}
+pr2013_low <- sat %>%
+    filter(Participation_Rate_2013<50) %>%
+    select(District,Participation_Rate_2013)
+ggplot(pr2013_low) +
+  geom_point(aes(Participation_Rate_2013,District))
+```
+Which districts have the highest participation rate?
+```{r}
+pr2012_highest <- sat %>%
+    filter(Participation_Rate_2012 == 100) %>%
+    select(District) 
+ggplot(pr2012_highest) +
+  geom_bar(aes(District))+
+coord_flip()
+```
+
+```{r}
+pr2013_highest <- sat %>%
+    filter(Participation_Rate_2013 == 100) %>%
+    select(District) 
+ggplot(pr2013_highest) +
+  geom_bar(aes(District))+
+coord_flip()
+```
+
+2.For the schools who have students more than 130, which shools have highest percent Meeting Benchmark?
+```{r}
+test_takers <- sat %>%
+ filter(Test_takers_2012>=130) %>%
+ select(School,Percent_Meeting_Benchmark_2012) %>%
+ arrange(desc(Percent_Meeting_Benchmark_2012))%>%
+ filter(Percent_Meeting_Benchmark_2012 >= 60)
+test_takers
+```
+
+3.How many schools reach percent meeting benchmark 60% or above, how many schools have not?
+```{r}
+benchmark2012 <- sat %>%
+  mutate(benchmark = ifelse(Percent_Meeting_Benchmark_2012<= 50, "2012_50_or_below",
+                               "2012_above_50"))
+
+ggplot(data = benchmark2012) +
+  geom_bar(mapping = aes(x =benchmark, fill = Percent_Meeting_Benchmark_2012)) +
+  coord_flip()
+```
+
+```{r}
+benchmark2013 <- sat %>%
+  mutate(benchmark2 = ifelse(Percent_Meeting_Benchmark_2013<= 50, "2013—50_or_below",
+                               "2013_above_50"))
+
+ggplot(data = benchmark2013) +
+  geom_bar(mapping = aes(x =benchmark2, fill = Percent_Meeting_Benchmark_2013)) +
+  coord_flip()
+```
+Conclusion
+Qustion 1:
+In district of Connecticut technical high school system have most the lowest participation rate. This district have 6 schools's participation rate all 40 or below in 2012. In 2013, connecticut technical high school system have 9 school's participation rate below 50. It meaning the students of this district are casual, even not attend the test. New haven and Hartford have hightest participation rate in both two years.
+Question2:
+For the schools who have students more than 130, New Canaan Hight school and Wilton High school have the highest percent meeting benchmark. These two both have 82 percent of students who take the test and reach benchmark. It meaning these school have a high quality of education.
+Question3:
+From the overall to view meeting benchmark, in 2012 there is only 50 percent of people above 50 percent meeting benchmark. In 2013, the meeting benchmark above 50 percent increase to around 60 percent. It shows that overall quality of education had improved.
+
+
+
+
