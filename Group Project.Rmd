@@ -286,6 +286,12 @@ Gather them and plot it
 data2 %>% 
   gather(key = "SAT_Score_Range", value = "Count", 4:9) %>%
   mutate(SAT_Score_Range = factor(SAT_Score_Range,levels=c("400-600","600-800","800-1000","1000-1200","1200-1400","1400-1600"))) %>%
+  group_by(year) %>%
+  summarize(sd = sd(Count))
+
+data2 %>% 
+  gather(key = "SAT_Score_Range", value = "Count", 4:9) %>%
+  mutate(SAT_Score_Range = factor(SAT_Score_Range,levels=c("400-600","600-800","800-1000","1000-1200","1200-1400","1400-1600"))) %>%
   ggplot() + 
   geom_bar(aes(SAT_Score_Range,Count),stat="identity") + 
   facet_wrap(~year) +
@@ -294,9 +300,9 @@ data2 %>%
 ```
 
 ```{r}
-ggplot(data2) %>%
-  geom_bar(aes()) + 
-  facet_wrap(~year)
+rnorm
+ggplot() + 
+  geom_point()
 ```
 
 
