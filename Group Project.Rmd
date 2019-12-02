@@ -233,7 +233,9 @@ We can see that they fall around the 300-330 population range.
 
 ### How does our BMR index of the entire Connecticut schools compare with the CORGIS Dataset?
 
-```{r}
+The CORGIS dataset is from https://corgis-edu.github.io/corgis/csv/school_scores/
+
+```{r info=FALSE, warning=FALSE}
 corgis <- read_csv("school_scores.csv")
 colnames(corgis%>%select(1,4:6,66,69,72,75,78,81,84,87,90,93,96,99))
 ```
@@ -283,9 +285,12 @@ Gather them and plot it
 ```{r}
 data2 %>% 
   gather(key = "SAT_Score_Range", value = "Count", 4:9) %>%
+  mutate(SAT_Score_Range = factor(SAT_Score_Range,levels=c("400-600","600-800","800-1000","1000-1200","1200-1400","1400-1600"))) %>%
   ggplot() + 
-  geom_bar(aes(`SAT_Score_Range`,Count),stat="identity") + 
-  facet_wrap(~year)
+  geom_bar(aes(SAT_Score_Range,Count),stat="identity") + 
+  facet_wrap(~year) +
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 50, hjust = 1)) 
 ```
 
 ```{r}
