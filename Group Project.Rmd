@@ -1,10 +1,10 @@
 ---
 title: "SAT Benchmark Performance in Connecticut in 2012-13"
 output: 
-  github_document:
-    default
   html_document:
     df_print: paged
+  github_document:
+    default
   pdf_document: default
 ---
 
@@ -37,13 +37,13 @@ https://catalog.data.gov/dataset/sat-school-participation-and-performance-2012-2
 The SAT benchmarks are designed to measure the college readiness of high school students, using the SAT, a college entrance examination taken by nearly 1.45 million students in all 50 United States and the District of Columbia. The SAT benchmark determined in this study was 1550 for the composite. According to research conducted by the College Board, a score of 1550 indicates that a student will have a 65 percent or greater likelihood of achieving a B- average or higher during the first year of college.
 (College Board. 250 Vesey Street, New York, NY 10281. Tel: 212-713-8000; e-mail: research@collegeboard.org; Web site: http://research.collegeboard.org)
 
-The primary dataset provided SAT Benchmark Meeting and participation rate, but it did not exactly show how many senior students reach the Benchmark, and the Percent among the total number of senior students in the schools. Therefore, we created a  new index called BMR(Benchmark Meeting Rate),which comes through the number of Benchmark-Meeting seniors divided by the number of total seniors in the same school. We use BMR to evaluate SAT Benchmark Performance among high schools in Connecticut in 2012 and 2013. 
+The primary dataset provided SAT Benchmark Meeting and participation rate, but it did not exactly show how many senior students reach the Benchmark, and the Percent among the total number of senior students in the schools. Therefore, we created a  new index called BMR(Benchmark Meeting Rate), which comes through the number of Benchmark-Meeting seniors divided by the number of total seniors in the same school. We use BMR to evaluate SAT Benchmark Performance among high schools in Connecticut in 2012 and 2013. 
 
 ## Questions and Findings
 ### What is the relationship between a school's senior population and the school's benchmark-meeting rate?
 
 ```{r info=FALSE}
-data <- read_csv("C:/Users/alex/Documents/SAT-Benchmark-Group-Report/SAT_School_Participation_and_Performance__2012-2013.csv")
+data <- read_csv("SAT_School_Participation_and_Performance__2012-2013.csv")
 ```
 
 ```{r}
@@ -231,9 +231,74 @@ ggplot() +
 
 We can see that they fall around the 300-330 population range.
 
+### How does our BMR index of the entire Connecticut schools compare with the CORGIS Dataset?
+
+```{r}
+corgis <- read_csv("school_scores.csv")
+colnames(corgis%>%select(1,4:6,66,69,72,75,78,81,84,87,90,93,96,99))
+```
+
+
+```{r}
+data2 <- corgis %>%
+  #First get Connecticut schools in the year 2012 and 2013
+  dplyr::filter(Year == 2012 | Year == 2013) %>%
+  dplyr::filter(State.Name == "Connecticut") %>%
+  select(1,4:6,66,69,72,75,78,81,84,87,90,93,96,99) %>%
+  #rename for simplicity
+  rename( year=Year,
+          total="Total.Test-takers",
+          Math_mean = "Total.Math",
+          Verbal_mean="Total.Verbal",
+          "200-300 Math"="Score Ranges.Between 200 to 300.Math.Total",
+          "200-300 Verbal"="Score Ranges.Between 200 to 300.Verbal.Total",
+          "300-400 Math"="Score Ranges.Between 300 to 400.Math.Total",
+          "300-400 Verbal"="Score Ranges.Between 300 to 400.Verbal.Total",
+          "400-500 Math"="Score Ranges.Between 400 to 500.Math.Total",
+          "400-500 Verbal"="Score Ranges.Between 400 to 500.Verbal.Total",
+          "500-600 Math"="Score Ranges.Between 500 to 600.Math.Total",
+          "500-600 Verbal"="Score Ranges.Between 500 to 600.Verbal.Total",
+          "600-700 Math"="Score Ranges.Between 600 to 700.Math.Total",
+          "600-700 Verbal"="Score Ranges.Between 600 to 700.Verbal.Total",
+          "700-800 Math"="Score Ranges.Between 700 to 800.Math.Total",
+          "700-800 Verbal"="Score Ranges.Between 700 to 800.Verbal.Total"
+          ) %>%
+  #Calculate the total number for each range of SAT scores
+  transmute(
+    year=year,
+    SAT_mean = Math_mean + Verbal_mean,
+    test_takers = total,
+    "400-600" = `200-300 Math` + `200-300 Verbal`,
+    "600-800" = `300-400 Math` + `300-400 Verbal`,
+    "800-1000" = `400-500 Math` + `400-500 Verbal`,
+    "1000-1200" = `500-600 Math` + `500-600 Verbal`,
+    "1200-1400" = `600-700 Math` + `600-700 Verbal`,
+    "1400-1600" = `700-800 Math` + `700-800 Verbal`,
+    )
+data2
+```
+
+Gather them and plot it
+
+```{r}
+data2 %>% 
+  gather(key = "SAT_Score_Range", value = "Count", 4:9) %>%
+  ggplot() + 
+  geom_bar(aes(`SAT_Score_Range`,Count),stat="identity") + 
+  facet_wrap(~year)
+```
+
+```{r}
+ggplot(data2) %>%
+  geom_bar(aes()) + 
+  facet_wrap(~year)
+```
+
+
+
 ## Conclusion
 
-According to the graphs, we removed all the null values in both 2012 and 2013 from data of SAT School Participation and Performance informations in Connecticut state, there are around 170 schools remaining. From the graph of comparison of population and BMR, we find that students numbers in most school were less than 300, and most of them had BMR values lower than 0.5. SAT Benchmark Performance of 2013 increase a little bit than 2012, but it did not show big change overall. There are 3 schools from three districts have the highest BMR in both years, which are "Darien High School", "New canaan High School" and "Wilton High School". All three schools have student scale around 300. We concluded that in the state of Connecticut in 2012 and 2013, student scale around 300 can make best SAT Benchmark Performance.
+According to the graphs, we removed all the null values in both 2012 and 2013 from data of SAT School Participation and Performance informations in Connecticut state, there are around 170 schools remaining. From the graph of comparison of population and BMR, we find that students numbers in most school were less than 300, and most of them had BMR values lower than 0.5. SAT Benchmark Performance of 2013 increase a little bit than 2012, but it did not show big change overall. There are 3 schools from three districts have the highest BMR in both years, which are "Darien High School", "New Canaan High School" and "Wilton High School". All three schools have student scale around 300. We concluded that in the state of Connecticut in 2012 and 2013, student scale around 300 can make best SAT Benchmark Performance.
 
 ## Contributions
 
