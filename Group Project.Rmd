@@ -270,13 +270,16 @@ data2 <- corgis %>%
     year=year,
     SAT_mean = Math_mean + Verbal_mean,
     test_takers = total,
-    "400-600" = `200-300 Math` + `200-300 Verbal`,
-    "600-800" = `300-400 Math` + `300-400 Verbal`,
-    "800-1000" = `400-500 Math` + `400-500 Verbal`,
-    "1000-1200" = `500-600 Math` + `500-600 Verbal`,
-    "1200-1400" = `600-700 Math` + `600-700 Verbal`,
-    "1400-1600" = `700-800 Math` + `700-800 Verbal`,
-    )
+    "400-600" = `200-300 Math` + `200-300 Verbal`/2,
+    "600-800" = `300-400 Math` + `300-400 Verbal`/2,
+    "800-1000" = `400-500 Math` + `400-500 Verbal`/2,
+    "1000-1200" = `500-600 Math` + `500-600 Verbal`/2,
+    "1200-1400" = `600-700 Math` + `600-700 Verbal`/2,
+    "1400-1600" = `700-800 Math` + `700-800 Verbal`/2,
+    ) %>%
+  gather(key = "SAT_Score_Range", value = "Count", 4:9) %>%
+  #Add factors
+  mutate(SAT_Score_Range = factor(SAT_Score_Range,levels=c("400-600","600-800","800-1000","1000-1200","1200-1400","1400-1600")))
 data2
 ```
 
@@ -284,25 +287,65 @@ Gather them and plot it
 
 ```{r}
 data2 %>% 
-  gather(key = "SAT_Score_Range", value = "Count", 4:9) %>%
-  mutate(SAT_Score_Range = factor(SAT_Score_Range,levels=c("400-600","600-800","800-1000","1000-1200","1200-1400","1400-1600"))) %>%
-  group_by(year) %>%
-  summarize(sd = sd(Count))
+  dplyr::filter(year==2012) %>%
+  mutate(percentage = Count/sum(Count), Count = Count/2) %>%
+  select(1,2,4,6)
 
 data2 %>% 
-  gather(key = "SAT_Score_Range", value = "Count", 4:9) %>%
-  mutate(SAT_Score_Range = factor(SAT_Score_Range,levels=c("400-600","600-800","800-1000","1000-1200","1200-1400","1400-1600"))) %>%
+  dplyr::filter(year==2013) %>%
+  mutate(percentage = Count/sum(Count), Count = Count/2) %>%
+  select(1,2,4,6)
+
+data2 %>% 
   ggplot() + 
   geom_bar(aes(SAT_Score_Range,Count),stat="identity") + 
   facet_wrap(~year) +
   theme_bw() + 
-  theme(axis.text.x = element_text(angle = 50, hjust = 1)) 
+  theme(axis.text.x = element_text(angle = 50, hjust = 1))
 ```
 
+We know the mean is at 1017 for 2012, and 1018 for 2013. Since both numbers are close to 1000, we may put the peak in between 800-1000 and 1000-1200. In a normal curve, a standard deviation should be about 34% of the data. Here, 1000-1200 is about 30% of the data, which has a width of 200, so we can ballpark the standard deviation to be around 210 for both years.
+
+For year 2012: Mean = 1014, Standard Deviation = 210. We wish to find the percentage of students that met the benchmark, which is over 1550.
+To do this we calculate a z-score.
+
 ```{r}
-rnorm
-ggplot() + 
-  geom_point()
+tibble(
+  x = seq(400,1600),
+  y = (1/(210*sqrt(2*pi))) * exp(1)^((-1*(x-1014)^2)/(2*(210)^2))
+  ) %>%
+  ggplot() +
+  geom_point(aes(x,y)) + 
+  geom_vline(xintercept = 1550, colour = "Red") + 
+  scale_x_continuous(breaks = seq(400,1600,by=100)) +
+  theme_bw() +
+  labs(y="",x="SAT Score")
+```
+
+ The area under the curve to the right of the red line is the percentage of students who've met the benchmark in this dataset.
+ We can calculate the numerical value of this by finding the z-score first.
+ 
+ z-score = (1550 - 1014) / 210 = 2.5524
+ 
+ P(SAT_Score > 1550) = 1 - P(SAT_Score < 1550) = 1 - pnorm(1550,1014,210)
+ 
+```{r}
+1 - pnorm(1550,1014,210)
+```
+ 
+ We can do the same thing for 2013:
+ 
+```{r}
+1 - pnorm(1550,1018,210)
+```
+ 
+ Based on our calculations, about 0.5% of the total number of test-takers in Connecicut passed the benchmark.
+
+Let's compare this result with our original data set.
+
+```{r}
+data %>%
+  summarize(mean_bmr = mean(bmr))
 ```
 
 
