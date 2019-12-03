@@ -304,10 +304,18 @@ data2 %>%
   theme(axis.text.x = element_text(angle = 50, hjust = 1))
 ```
 
+
 We know the mean is at 1017 for 2012, and 1018 for 2013. Since both numbers are close to 1000, we may put the peak in between 800-1000 and 1000-1200. In a normal curve, a standard deviation should be about 34% of the data. Here, 1000-1200 is about 30% of the data, which has a width of 200, so we can ballpark the standard deviation to be around 210 for both years.
 
-For year 2012: Mean = 1014, Standard Deviation = 210. We wish to find the percentage of students that met the benchmark, which is over 1550.
-To do this we calculate a z-score.
+For year 2012: Mean = 1014, Standard Deviation = 210. We wish to find the percentage of students that met the benchmark.
+
+Before we calculate the benchmark, we must take note of one thing. Our first dataset (from Data.gov) has a total score of 2400, and the benchmark was placed at 1550. Our second dataset (from CORGIS) has a total score of 1600, since the Writing section wasn't included, so in order to calculate a new fitting benchmark, we will take a ratio. 
+
+1550 / 2400 = x / 1600
+
+Solving this, we get x = 1033, so our new benchmark is placed at 1033.
+
+To find the percentage of students that met this benchmark, we'll calculate a z-score.
 
 ```{r}
 tibble(
@@ -316,7 +324,7 @@ tibble(
   ) %>%
   ggplot() +
   geom_point(aes(x,y)) + 
-  geom_vline(xintercept = 1550, colour = "Red") + 
+  geom_vline(xintercept = 1033, colour = "Red") + 
   scale_x_continuous(breaks = seq(400,1600,by=100)) +
   theme_bw() +
   labs(y="",x="SAT Score")
@@ -325,26 +333,27 @@ tibble(
  The area under the curve to the right of the red line is the percentage of students who've met the benchmark in this dataset.
  We can calculate the numerical value of this by finding the z-score first.
  
- z-score = (1550 - 1014) / 210 = 2.5524
+ z-score = (1033 - 1014) / 210 = 2.5524
  
- P(SAT_Score > 1550) = 1 - P(SAT_Score < 1550) = 1 - pnorm(1550,1014,210)
+ P(SAT_Score > 1033) = 1 - P(SAT_Score < 1033) = 1 - pnorm(1033,1014,210)
  
 ```{r}
-1 - pnorm(1550,1014,210)
+1 - pnorm(1033,1014,210)
 ```
  
  We can do the same thing for 2013:
  
 ```{r}
-1 - pnorm(1550,1018,210)
+1 - pnorm(1033,1018,210)
 ```
  
- Based on our calculations, about 0.5% of the total number of test-takers in Connecicut passed the benchmark.
+
 
 Let's compare this result with our original data set.
 
 ```{r}
 data %>%
+  group_by(year) %>%
   summarize(mean_bmr = mean(bmr))
 ```
 
