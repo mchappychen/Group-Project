@@ -37,13 +37,15 @@ https://catalog.data.gov/dataset/sat-school-participation-and-performance-2012-2
 The SAT benchmarks are designed to measure the college readiness of high school students, using the SAT, a college entrance examination taken by nearly 1.45 million students in all 50 United States and the District of Columbia. The SAT benchmark determined in this study was 1550 for the composite. According to research conducted by the College Board, a score of 1550 indicates that a student will have a 65 percent or greater likelihood of achieving a B- average or higher during the first year of college.
 (College Board. 250 Vesey Street, New York, NY 10281. Tel: 212-713-8000; e-mail: research@collegeboard.org; Web site: http://research.collegeboard.org)
 
-The primary dataset provided SAT Benchmark Meeting and participation rate, but it did not exactly show how many senior students reach the Benchmark, and the Percent among the total number of senior students in the schools. Therefore, we created a  new index called BMR(Benchmark Meeting Rate), which comes through the number of Benchmark-Meeting seniors divided by the number of total seniors in the same school. We use BMR to evaluate SAT Benchmark Performance among high schools in Connecticut in 2012 and 2013. 
+The primary dataset provided SAT Benchmark Meeting and participation rate, but it did not exactly show how many senior students reach the Benchmark, and the Percent among the total number of senior students in the schools. Therefore, we created a  new index called BMR(Benchmark Meeting Rate),which comes through the number of Benchmark-Meeting seniors divided by the number of total seniors in the same school. We use BMR to evaluate SAT Benchmark Performance among high schools in Connecticut in 2012 and 2013. 
+
+Also we use second dataset:The CORGIS dataset (https://corgis-edu.github.io/corgis/csv/school_scores/).This dataset includes SAT Scores across the country from 2005 to 2015. Certainly we will focus on Connecticut's data from 2012 to 2013 which is comparable in this project. Not like the primary dataset showing each schools, this one just presents the statistic data for each states.
 
 ## Questions and Findings
 ### What is the relationship between a school's senior population and the school's benchmark-meeting rate?
 
 ```{r info=FALSE}
-data <- read_csv("SAT_School_Participation_and_Performance__2012-2013.csv")
+data <- read_csv("C:/Users/alex/Documents/SAT-Benchmark-Group-Report/SAT_School_Participation_and_Performance__2012-2013.csv")
 ```
 
 ```{r}
@@ -100,7 +102,7 @@ data %>%
   ) + theme_bw()
 ```
 
-From the graphic above , in 2012 the BMRs of Connecticut schools distributed from 0 to 80 percent, but in 2013 the rate went up a little bit, a couple of schools' numbers almost over 80 percent.
+From the graphic above , in 2012 the BMRs of Connecticut schools distributed from 0 to 80 percent, but in 2013 the rate went up a little bit, a couple of schools' numbers almost over 80 percent.And average BMRs for both years were around 30 percent with slight increasing trend.
 
 
 We'll plot the data to see if we can recognize any patterns.
@@ -236,7 +238,7 @@ We can see that they fall around the 300-330 population range.
 The CORGIS dataset is from https://corgis-edu.github.io/corgis/csv/school_scores/
 
 ```{r info=FALSE, warning=FALSE}
-corgis <- read_csv("school_scores.csv")
+corgis <- read_csv("C:/Users/alex/Documents/SAT-Benchmark-Group-Report/school_scores.csv")
 colnames(corgis%>%select(1,4:6,66,69,72,75,78,81,84,87,90,93,96,99))
 ```
 
@@ -283,19 +285,17 @@ data2 <- corgis %>%
 data2
 ```
 
-Gather them and plot it
+Gather them and plot them
 
 ```{r}
 data2 %>% 
   dplyr::filter(year==2012) %>%
   mutate(percentage = Count/sum(Count), Count = Count/2) %>%
   select(1,2,4,6)
-
 data2 %>% 
   dplyr::filter(year==2013) %>%
   mutate(percentage = Count/sum(Count), Count = Count/2) %>%
   select(1,2,4,6)
-
 data2 %>% 
   ggplot() + 
   geom_bar(aes(SAT_Score_Range,Count),stat="identity") + 
@@ -303,7 +303,6 @@ data2 %>%
   theme_bw() + 
   theme(axis.text.x = element_text(angle = 50, hjust = 1))
 ```
-
 
 We know the mean is at 1017 for 2012, and 1018 for 2013. Since both numbers are close to 1000, we may put the peak in between 800-1000 and 1000-1200. In a normal curve, a standard deviation should be about 34% of the data. Here, 1000-1200 is about 30% of the data, which has a width of 200, so we can ballpark the standard deviation to be around 210 for both years.
 
@@ -316,6 +315,7 @@ Before we calculate the benchmark, we must take note of one thing. Our first dat
 Solving this, we get x = 1033, so our new benchmark is placed at 1033.
 
 To find the percentage of students that met this benchmark, we'll calculate a z-score.
+
 
 ```{r}
 tibble(
@@ -330,43 +330,35 @@ tibble(
   labs(y="",x="SAT Score")
 ```
 
- The area under the curve to the right of the red line is the percentage of students who've met the benchmark in this dataset.
+The area under the curve to the right of the red line is the percentage of students who've met the benchmark in this dataset.
  We can calculate the numerical value of this by finding the z-score first.
  
  z-score = (1033 - 1014) / 210 = 2.5524
  
  P(SAT_Score > 1033) = 1 - P(SAT_Score < 1033) = 1 - pnorm(1033,1014,210)
- 
+
+So Benchmark Meeting rate in 2012 the is number below:0.46
+
 ```{r}
 1 - pnorm(1033,1014,210)
 ```
- 
- We can do the same thing for 2013:
- 
+
+So Benchmark Meeting rate in 2013 the is number below:0.47
+
 ```{r}
 1 - pnorm(1033,1018,210)
 ```
- 
 
-
-Let's compare this result with our original data set.
-
-```{r}
-data %>%
-  group_by(year) %>%
-  summarize(mean_bmr = mean(bmr))
-```
-
-
+It is reasonable that they were higher than median BMRs about 0.3, because the base numbers were different. 
 
 ## Conclusion
 
-According to the graphs, we removed all the null values in both 2012 and 2013 from data of SAT School Participation and Performance informations in Connecticut state, there are around 170 schools remaining. From the graph of comparison of population and BMR, we find that students numbers in most school were less than 300, and most of them had BMR values lower than 0.5. SAT Benchmark Performance of 2013 increase a little bit than 2012, but it did not show big change overall. There are 3 schools from three districts have the highest BMR in both years, which are "Darien High School", "New Canaan High School" and "Wilton High School". All three schools have student scale around 300. We concluded that in the state of Connecticut in 2012 and 2013, student scale around 300 can make best SAT Benchmark Performance.
+According to the analysis, there were around 170 schools from Connecticut in 2012 and 2013 considered in the project . We find that senior students numbers in most school were less than 300, and in average almost 30% senior students have met SAT Benchmark. If only considering SAT test-taking senior students, almost 50% of them have met this Benchmark. SAT Benchmark Performance of 2013 increasd a little bit than 2012, but it did not show big change overall. There were 3 schools from three districts had the outstanding performance in both years, which were "Darien High School", "New canaan High School" and "Wilton High School". All three schools had senior student scale around 300. We concluded that in the state of Connecticut in 2012 and 2013, senior student scale around 300 can make best SAT Benchmark Performance.
 
 ## Contributions
 
 Alex - Created the formula for BMR, came up with the ideas on what to explain from our model, tidied the data frame, and proofread the project for any errors.
 
-Michael - Created the models, analyzed each model, and made the plots looking pretty.
+Michael - Created the models, analyzed each model, and made the plots looking pretty, had special contribution to analysis of the CORGIS dataset.
 
 Hongyang - Wrote the Introduction, the Conlcusion, and added the graphs for the schools with the highest bmr.
