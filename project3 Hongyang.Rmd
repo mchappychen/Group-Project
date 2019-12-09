@@ -1,0 +1,146 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r echo=FALSE, results="hide"}
+library(splines)
+library(modelr)
+library(modelr)
+library(tidyverse)
+```
+
+
+ What was the trend of world happiness scores from 2015 to 2019?
+I combined the all data of for 5 years, and added Region for the last three years.
+```{r}
+aaa <- read_csv("D:\\R\\2015.csv")
+Country_Region <- aaa %>%
+  select(Country, Region)
+
+da15 <- read_csv("D:\\R\\2015.csv")  
+rank2015 <- da15 %>%
+ select(Country,Region,`Happiness Rank`,`Happiness Score`) %>%
+ rename(Rank=`Happiness Rank`) %>%
+ rename(Score=`Happiness Score`) %>%
+ mutate(year="2015")
+
+da16 <- read_csv("D:\\R\\2016.csv")
+rank2016 <- da16 %>%
+ select(Country,Region,`Happiness Rank`,`Happiness Score`) %>%
+ rename(Rank=`Happiness Rank`) %>%
+ rename(Score=`Happiness Score`) %>%
+ mutate(year="2016")
+
+da17 <- read_csv("D:\\R\\2017.csv")
+rank2017 <- da17 %>%
+ left_join(Country_Region,by = "Country")%>%
+ select(Country,Region,Happiness.Rank,Happiness.Score) %>%
+ rename(Rank=Happiness.Rank) %>%
+ rename(Score=Happiness.Score) %>%
+ mutate(year="2017")
+
+da18 <- read_csv("D:\\R\\2018.csv")
+rank2018 <- da18 %>%
+ rename(Country=`Country or region`) %>%
+ rename(Rank=`Overall rank`) %>%
+left_join(Country_Region,by = "Country")%>%
+ select(Country,Region,Rank, Score) %>%
+  mutate(year="2018")
+
+da19 <- read_csv("D:\\R\\2019.csv")
+rank2019 <- da19 %>%
+ rename(Country=`Country or region`) %>%
+ rename(Rank=`Overall rank`) %>%
+left_join(Country_Region,by = "Country")%>%
+ select(Country,Region,Rank, Score) %>%
+ mutate(year="2019")
+
+total<- tibble(
+  Country=c(rank2015$Country ,rank2016$Country ,rank2017$Country  ,rank2018$Country ,rank2019$Country),
+  Region=c(rank2015$Region ,rank2016$Region ,rank2017$Region  ,rank2018$Region ,rank2019$Region),
+  Rank=c(rank2015$Rank ,rank2016$Rank ,rank2017$Rank ,rank2018$Rank ,rank2019$Rank),
+  Score=c(rank2015$Score ,rank2016$Score ,rank2017$Score ,rank2018$Score ,rank2019$Score),
+  year=c(rank2015$year ,rank2016$year ,rank2017$year ,rank2018$year ,rank2019$year)
+  ) %>%
+arrange(Country,Rank)
+
+totl <- na.omit(total)  
+```
+
+The geom_line graph of happiness score.
+```{r}
+totl %>% 
+  ggplot(aes(year, Score, group = Country)) +
+    geom_line(alpha = 1/3)
+```
+
+Get the data of predictions and residuals.
+```{r}
+by_country <- totl%>% 
+  group_by(Country) %>% 
+  nest()
+
+country_model <- function(df) {
+  lm(Score ~ year, data = totl)
+}
+
+by_country <- by_country %>% 
+  mutate(model = map(by_country$data, country_model))
+
+
+by_country <- by_country %>% 
+  mutate(
+    pred = map2(data, model, add_predictions)
+  )
+preds <- unnest(by_country, pred)
+
+by_country <- by_country %>% 
+  mutate(
+    resids = map2(data, model, add_residuals)
+  )
+resids <- unnest(by_country, resids)
+
+resids
+```
+
+
+The boxplot graph of happiness score
+```{r}
+ggplot(resids, aes(year, Score)) +
+ geom_boxplot()
+```
+
+The graph of residuals.
+```{r}
+ggplot(resids, aes(year, resid)) +
+ geom_boxplot()
+```
+The graph of predictions.
+```{r}
+ggplot(preds, aes(year, pred)) +
+ geom_boxplot()
+```
+
+Then I separate the countries into different Regions to check each Continent's happiness score Continent.
+```{r}
+ggplot(resids, aes(year, Score)) +
+ geom_boxplot() +
+ facet_wrap(~ Region, nrow = 2)
+
+```
+
+The geom_line of predictions 
+```{r}
+preds %>% 
+  ggplot(aes(year, pred)) +
+    geom_line(aes(group = Country), alpha = 1/3) + 
+    geom_smooth(se = FALSE)
+```
+
