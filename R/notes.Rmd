@@ -1,0 +1,330 @@
+```{r echo=FALSE, results="hide"}
+library(modelr)
+library(viridis)
+library(splines)
+library(nycflights13)
+library(lubridate)
+library(tidyverse)
+library(dplyr)
+library(gapminder)
+library(broom)
+```
+
+```
+geom_point(aes(a,b,color=discrete,size=continuous,alpha=continuous))
+facet_wrap( ~ top , nrow=number of rows)
+facet_grid(right ~ top)
+geom_bar(aes(x,fill=discrete),stat="identity") for discrete
+geom_bar(aes(x,y=..prop..,group=1)) for propotion
+geom_histogram(binwidth=0.5) for continuous, binwidth groups x into bins
+geom_boxplot(aes(x=reorder(x,y,FUN=mean),y))
+coord_cartesian(xlim=c(a,b),ylim=c(a,b)) zooms in, doesnt modify graph
+labs(title="Title",caption="Figure 1.1",x="x-axis",y="y-axis")
+scale_x_continuous(breaks=seq(start,finish,by))
+group_by(columns) %>%
+  summarize(x=mean(column,na.rm=TRUE))
+sum() - sum of observations  sum(!is.na(x))
+n() - number of observations
+count(column,column,...) count of each duplicate entries by column names
+count(cut_width(column,0.5)) groups continuous variables into bins
+%/% floor division %% remainder division
+| and & is for vectors (data tables)
+|| and && is for scalars
+writeLines() to see the actual contents of the string
+inner_join(left,right,by="key") only matching keys get selected
+left_join() every row in left data gets preserved
+full_join() every row gets preserved
+semi_join(x,y) keeps every row in x that has a match in y, doesn't join
+anti_join() keeps every row in x that does NOT have a match in y, doesn't join
+gather(column_name, column_name, key = "new_column_name", value = "new_column_name")
+spread(key=column_name,type=column_name)
+```
+
+```{r}
+table4a
+table4a %>% 
+  gather(`1999`, `2000`, key = "year", value = "cases") 
+  #%>%  spread(key = year, value = cases)
+```
+
+
+```{r}
+sim1
+#mean-square residuals
+measure_distance <- function(mod,data){
+  diff <- data$y - (mod[1] + data$x*mod[2])
+  sqrt(mean(diff^2))
+}
+
+best <- optim(c(0, 0), measure_distance, data = sim1)
+
+ggplot(sim1, aes(x, y)) + 
+  geom_point(size = 2, colour = "grey30") + 
+  geom_abline(color="blue",intercept = best$par[1], slope = best$par[2])
+```
+
+11/5
+```{r warning=FALSE}
+
+#lm() is linear model
+lm(y~x,data=sim1)$coefficients
+
+sim1_mod <- lm(y ~ x, data = sim1)
+
+grid <- sim1 %>% 
+  data_grid(x) %>% 
+  add_predictions(sim1_mod) 
+
+ggplot(sim1,aes(x)) + 
+  geom_point(aes(y=y)) + 
+  geom_line(aes(y=pred),data=grid,color="red")
+
+sim1 <- sim1 %>% 
+  add_residuals(sim1_mod)
+
+#Check the residuals, it should be approximately normal
+ggplot(sim1, aes(resid)) + 
+  geom_freqpoly(binwidth = 0.5)
+
+#Residual plot
+ggplot(sim1, aes(x, resid)) + 
+  geom_hline(yintercept = 0, colour = "white", size = 3) + 
+  geom_point() 
+
+```
+
+
+
+Transformations
+
+```{r}
+sim5 <- tibble(
+  x = seq(0, 3.5 * pi, length = 500),
+  y = 4 * sin(x) + rnorm(length(x))
+)
+
+mod1 <- lm(y ~ ns(x, 1), data = sim5)
+mod2 <- lm(y ~ ns(x, 2), data = sim5)
+mod3 <- lm(y ~ ns(x, 3), data = sim5)
+
+grid <- sim5 %>% 
+  data_grid(x = seq_range(x, n = 50, expand = 0.1)) %>% 
+  gather_predictions(mod1, mod2, mod3, .pred = "y")
+grid
+ggplot(sim5, aes(x, y)) + 
+  geom_point() +
+  geom_line(data = grid, colour = "red") +
+  facet_wrap(~ model)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+25.1 Gapminder
+
+How does life expectancy (lifeExp) change over time (year) for each country (country)?
+
+
+How does it look for Chinazi's life expectancy?
+```{r}
+chinazi <- dplyr::filter(gapminder, country == "China")
+chinazi %>% 
+  ggplot(aes(year, lifeExp)) + 
+  geom_line() + 
+  ggtitle("Full data for Chinazi = ")
+
+chinazi_mod <- lm(lifeExp ~ year, data = chinazi)
+chinazi %>% 
+  add_predictions(chinazi_mod) %>%
+  ggplot(aes(year, pred)) + 
+  geom_line() + 
+  ggtitle("Linear Model +")
+
+chinazi %>% 
+  add_residuals(chinazi_mod) %>% 
+  ggplot(aes(year, resid)) + 
+  geom_hline(yintercept = 0, colour = "white", size = 3) + 
+  geom_line() + 
+  ggtitle("Residuals") + 
+  xlim(1950,2010)
+```
+
+lol we can see their great leap forward of 100 million deaths after 1959, and the pollution after 1979
+
+Nested data frame:
+```{r}
+by_country <- gapminder %>% 
+  group_by(country, continent) %>% 
+  nest()
+by_country
+
+#There's a column of tibbles, let's try to access it
+by_country$data[[1]]
+
+#generate models for by_country
+country_model <- function(df) {
+  lm(lifeExp ~ year, data = df)
+}
+models <- map(by_country$data, country_model)
+head(models,1)
+
+#it would be better to add the models into the data frame
+by_country <- by_country %>%
+  mutate(model = map(data,country_model))
+by_country
+
+#add residuals for each model using map2
+by_country <- by_country %>% 
+  mutate(
+    resids = map2(data, model, add_residuals) #map2(first parameter for function, second parameter for function, function)
+  )
+by_country
+
+#Since we nested by_country we gotta unnest it
+resids <- unnest(by_country, resids)
+resids
+
+#and plot the residuals on a residual plot for all the models
+resids %>% 
+  ggplot(aes(year, resid)) +
+    geom_line(aes(group = country), alpha = 1 / 3) + 
+    geom_smooth(se = FALSE)
+
+
+#lets facet by country
+resids %>% 
+  ggplot(aes(year, resid, group = country)) +
+    geom_line(alpha = 1 / 3) + 
+    facet_wrap(~continent)
+#Our model sucks for Africa apparently 
+```
+
+```{r}
+#add r-squared
+#The bigger r-squared, the more accurate the model
+glance <- by_country %>% 
+  mutate(glance = map(model, broom::glance)) %>% 
+  unnest(glance, .drop = TRUE) %>%
+  arrange(r.squared)
+glance
+#as you can see, our model sucks for Rwanda
+#let see what's up with the sucky countries
+bad_fit <- glance %>%
+  dplyr::filter(r.squared < 0.2)
+
+gapminder %>%
+  semi_join(bad_fit,by="country") %>%
+  ggplot(aes(year, lifeExp, colour = country)) +
+    geom_line()
+
+#Rwanda had a genocide, and other African countries had an HIV plague
+
+```
+
+
+
+
+
+
+

@@ -1,0 +1,440 @@
+---
+title: "Michael Chen R Project"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+# Introduction
+The data set this paper is going to explore is called the adult data set, also known as the Census Income dataset. It collected information of U.S. citizens mostly based on their social classes.
+
+Some entries in the dataset are not understandable to all humans. For example, many people don't understand what "final weight" is, but they do understand what population is. To fix this, I parsed the dataset using similar, yet appropriate column names so that it's more understandable to read. There are also entry names that are not understandable to everyone. For instance, many people know what an associate's degree is, but they don't know what the difference between assoc-acdm and assoc-voc is.
+
+The first question that came to my mind when confronted with a data set that deals with sexes are the differences between men and women. This led me to think about the stereotype of whether men are smarter than women. I explored this stereotype by comparing the difference between the amount of men and women in each educational level.
+
+Another question that came to my mind was whether women have a greater chance of finding a mate than men. When I was little, I always thought that males are the ones that need to compete against other males for a female, whereas a female can simply choose which male to mate with. From this, I would guess that women are more likely to get married than men. I will attempt to prove my hypothesis by comparing the marriage rates of men and women, and try to find out if it differs by any native countries due to different cultural backgrounds.
+
+There's an ongoing steoreotype that U.S. farmers and fishermen are usually rednecks. A redneck is a work-class white male with little education, lots of pride in America, strong, and tough. When I went out onto the country side where I meet a lot of farmers, I'll typically see middle-aged men who are very strong. Possibly because farm work requires a lot of physical endurance, the best ages for working is around the middle-age. I'll try to see if this holds true by comparing the characteristics of farmers and fishermen.
+
+Lastly, I was curious as to whether there were people with high salaries that have little or no education. Given how there's lots of people that have taken part in this census, it's very likely that there are. But what makes them successful? I'll explore the characteristics that these low-educated, yet successful, people have by looking at their job, investments, work hours, and marital status.
+
+Some entries are marked as ?. This is possibly due to a data-entry error, or that the people on the census decided not to answer to that question. We will replace them with entries with ? as NA so it'll be easier to remove them later on. There may also be duplicate entries in the data set. We need to remove them as well.
+
+
+# Questions and findings
+
+```{r echo=FALSE,include=FALSE}
+library(tidyverse)
+library(viridis)
+#parse the data into human-readable variables names
+data <- read_csv("adult.data",col_names = c("age","workclass","population","education","education_num","marital_status","occupation","relationship","race","gender","capital_gain","capital_loss","hours_per_week","native_country","income"))
+```
+
+```{r  echo=FALSE,include=FALSE}
+#remove ? entries by replacing them with NA values 
+data <- data %>%
+  mutate(age=ifelse(age=="?",NA,age)) %>%
+  mutate(workclass=ifelse(workclass=="?",NA,workclass)) %>%
+  mutate(population=ifelse(population=="?",NA,population)) %>%
+  mutate(education=ifelse(education=="?",NA,education)) %>%
+  mutate(education_num=ifelse(education_num=="?",NA,education_num)) %>%
+  mutate(marital_status=ifelse(marital_status=="?",NA,marital_status)) %>%
+  mutate(occupation=ifelse(occupation=="?",NA,occupation)) %>%
+  mutate(relationship=ifelse(relationship=="?",NA,relationship)) %>%
+  mutate(race=ifelse(race=="?",NA,race)) %>%
+  mutate(gender=ifelse(gender=="?",NA,gender)) %>%
+  mutate(capital_gain=ifelse(capital_gain=="?",NA,capital_gain)) %>%
+  mutate(capital_loss=ifelse(capital_loss=="?",NA,capital_loss)) %>%
+  mutate(hours_per_week=ifelse(hours_per_week=="?",NA,hours_per_week)) %>%
+  mutate(native_country=ifelse(native_country=="?",NA,native_country)) %>%
+  mutate(income=ifelse(income=="?",NA,income)) %>%
+  
+  #remove duplicate entries
+  distinct()
+```
+
+### 1. Are men smarter than women?
+To answer this question, we'll compare the difference between men and women as education level goes up. But first, we need a ranking system to know which education is higher. We can use education_num to check the rankings of each education level.
+
+```{r echo=FALSE}
+#Check how the order of education_num corresponds with education
+data %>%
+  #We wish to  focus on the variables, education and education_num
+  group_by(education,education_num) %>%
+  summarize() %>%
+  arrange(education_num)
+```
+Table 1.1 Ranking of education levels by education number
+
+We now know how the education levels correspond with education. Let's examine if whether there are more males than females as education level goes up. We can also confirm that each education level corresponds with a unique education_num, so if 2 people are in 10th grade, they'll always have an education_num of 6. 
+
+
+```{r echo=FALSE}
+data %>%
+  #We wish to focus on the variables education_num and gender
+  group_by(education_num,gender) %>%
+  summarize(n=sum(population)) %>%
+  ggplot(aes(education_num,n)) + 
+  geom_line(aes(color=gender)) + #see the difference for each gender
+  theme_bw() + 
+  labs(title="Count of Education Levels by Gender",caption="Figure 1.2 Population of each education level for each gender",x="education level",y="count")
+```
+
+There's certainly more males than females in every education level, but some differences are small, while other differences are large. But there does not seem to be a trend where the gap between males and females grow wider as education level goes up.
+
+Which education levels have the greatest difference in males and females?
+
+```{r echo=FALSE}
+data %>%
+  mutate(education=ifelse(education=="Assoc-acdm","Associates-Academic",education)) %>% #rename to make it human-readable
+  mutate(education=ifelse(education=="Assoc-voc","Associates-Vocational",education)) %>%
+  group_by(education,gender) %>% #we're only focusing on education with gender
+  summarize(n=sum(population)) %>%
+  ggplot() + 
+  geom_bar(aes(education,n,fill=gender),stat="identity",position="dodge") +
+  theme_bw() + 
+  labs(title="Count of Educations by Gender",caption="Figure 1.3 Population of each education by gender",x="highest education",y="count") + 
+  theme(axis.text.x = element_text(angle=50,hjust=1)) #rotate the x-axis labels so they don't overlap each other
+```
+
+The greatest differences seem to be for high-school graduates, bachelors, and college students. For each of these education levels, there's significantly more males than females. But we can't completely conclude that this means males are smarter than females. There could be many more males than females in the United States. So we also need to compare it by the propotion of gender for each education level by the total population for that gender.
+
+The data uses weights to estimate the population. So when we're calculating the total population of males and females, we need to use the data's total weight of males and females.
+
+```{r echo=FALSE}
+totalWeight <- data %>%
+  group_by(gender) %>%
+  #find the sum of population for each gender
+  summarize(total_weight = sum(population))
+totalWeight
+```
+Table 1.4 Estimated population of each gender by weights
+
+There is a total weight of 1,998,648,762 females and 4,176,250,706 males. Notice how that's almost twice the number of males than females. I'm skeptic about whether the people who calculated the weights for each category did them correctly, because if the final weight truly represented the total number of U.S. citizens that fall into that row, then the sum of final weights should be around 300 million, but we just totaled it up to over 6 billion. The weights also imply that there are more than 2-times more males than females in the United States, something that sounds too absurd to be true, since we know the actual proportion should be closer to 50-50.
+
+But nevertheless, we have no choice but to use these totals for a proportion.
+
+
+```{r echo=FALSE}
+#Use the weights we calculated from Table 1.4
+totalFemale <- totalWeight %>%
+  #get the 2nd column 1st row of totalWeight for totalFemale
+  .[[2]] %>%
+  .[1]
+totalMale <- totalWeight %>%
+  #get the 2nd column 2nd row of totalWeight for totalMale
+  .[[2]] %>%
+  .[2]
+data %>%
+  mutate(education=ifelse(education=="Assoc-acdm","Associates-Academic",education)) %>% #rename to make it human-readable
+  mutate(education=ifelse(education=="Assoc-voc","Associates-Vocational",education)) %>%
+  group_by(education,gender) %>%
+  summarize(n=sum(population)) %>%
+  ungroup(education,gender) %>%
+  #create a proportion variable that calculates the proportion of each gender for each education category
+  transmute(education=education,gender=gender,prop=ifelse(gender=="Male",round(n/totalMale,2),round(n/totalFemale,2))) %>% 
+  ggplot(aes(education,prop)) + 
+  geom_bar(aes(education,prop,fill=gender),stat="identity",position="dodge") +
+  theme_bw() + 
+  labs(title="Proportion of Gender in each Education",caption="Figure 1.4",x="highest education",y="proportion") + 
+  #rotate the x-axis labels so they won't overlap
+  theme(axis.text.x = element_text(angle=50,hjust=1))
+```
+
+The proportion tells a different story. From the first data set, it seemed as if the education levels of Bachelors, HS-Grad, and Some-college had the greatest gap in gender between males and females. However when we look at the proportion of each gender, we see that there's only a little more males than females who attained a bachelors degree, almost the same proportion attained high-school graduate level, and a higher proportion of females in some-college than males. Based on this data, we cannot conclude that males are smarter than females. In fact, this could be evidence for females being smarter than males.
+
+### 2. Are women more likely to get married than men?
+We will answer this question by first defining what getting married is.
+
+```{r echo=FALSE}
+#see what variables are listed for marital_status
+data %>%
+  group_by(marital_status) %>%
+  summarize()
+```
+Table 2.1 Possible Values of marital_status
+
+We will define getting married as everything except never-married, because they were once married, even if they became separated.
+
+To find out if there is a higher proportion of married women than married men, we'll compare the bar graphs of married men vs married women.
+
+```{r echo=FALSE}
+data %>%
+  #add a new variable to be our definition of marriage
+  mutate(has_married=ifelse(marital_status=="Never-married","no","yes")) %>%
+  
+  #we are interested in the variables gender and marriage
+  group_by(gender,has_married) %>%
+  summarize(n=sum(population)) %>%
+  ggplot() + 
+  
+  #Use a bar chart to examine proportions
+  geom_bar(aes(gender,weight=n,fill=has_married),position="fill") + 
+  labs(y="proportion",title="Married Proportion of each Gender",caption="Figure 2.2 Proportion of people who have been married for each gender") +
+  theme_bw()
+```
+
+By looking at the graph, it appears that men are more likely to get married than women, since there's a much greater gap between men who are married vs men who aren't compared with the gap between women who are married and women who aren't. This has shocked me since I always thought it was harder to find a soul mate as a male rather than a female.
+A misconception that the reader can have is that the number of married men doesn't equal the number of married women. This is because our definition of has_married includes those who are separated and widowed. We are not intersted if the number of currently married men equates the number of married women. We are interested if it's easier to get married at least once as a man or as a woman.
+
+Let's take a look if there's a different story for any other countries.
+
+```{r echo=FALSE}
+data %>%
+  #create a new variable to define whether this group belongs to the married category
+  mutate(has_married=ifelse(marital_status=="Never-married","no","yes")) %>%
+  
+  #shorten the names so they fit facet_wrap function
+  mutate(native_country=ifelse(native_country=="Dominican-Republic","D-Republic",native_country)) %>%
+  mutate(native_country=ifelse(native_country=="Outlying-US(Guam-USVI-etc)","Guam Islands",native_country)) %>%
+  mutate(native_country=ifelse(native_country=="Holand-Netherlands","Netherlands",native_country)) %>%
+  mutate(native_country=ifelse(native_country=="United-States","U.S.",native_country)) %>%
+  mutate(native_country=ifelse(native_country=="Trinadad&Tobago","Tobago",native_country)) %>%
+  
+  #We wish to observe the variables of gender, has_married, and native_country
+  group_by(gender,has_married,native_country) %>%
+  summarize(n=sum(population),na.rm=TRUE) %>%
+  
+  ggplot() + 
+  geom_bar(aes(gender,weight=n,fill=has_married),position="fill") + 
+  scale_y_continuous(breaks=c(0,0.5,1.0)) +
+  labs(y="proportion",caption="Figure 2.3 Ratio of married people vs unmarried people by gender for each native country") +
+  #Since there are many countries, we'll use facet_wrap
+  facet_wrap(~native_country,nrow=6) +
+  theme_bw() + 
+  #rotate x-axis labels so texts wont overlap
+  theme(axis.text.x = element_text(angle=50,hjust=1))
+```
+
+Interestingly, almost every resident's native country seems to have more men who are married than women. The only native countries where it seems that females are more likely to get married than males are from the South, Scotland, Honduras, Guatemala, Guam Islands, and El-Salvador. This could be due to some cultural factors there that make it harder for males to get married. Netherlands has no proportion for males, probably because no one in the census is a male that came from the Netherlands. Scotland has a ratio of 1 for females who are married, which might be because only a few female scotlanders were surveyed and all of them were married. There's a country labeled named NA, possible for the respondents that didn't want to list their native country.
+
+Does education level affect the ratio of marriage between men and women?
+To answer this question, I would need to gather the data of proportion of males who are married vs not married for each age.
+We'll create this propotion by dividing the number of married, or never married, count by the total number of people for each gender and age group.
+```{r echo=FALSE}
+#Create a datatable for total number of males and females in each age group
+dataTotalByAge <- data %>%
+  group_by(gender,age) %>%
+  summarize(total=sum(population))
+dataTotalByAge
+```
+Table 2.4 Total population weight for each gender and age group
+
+Now we can use the values of the total column to make our proportion.
+
+```{r echo=FALSE}
+data %>%
+  mutate(has_married=ifelse(marital_status=="Never-married","no","yes")) %>%
+  
+  #we are focusing on the variables gender, has_married, and age
+  group_by(gender,has_married,age) %>%
+  summarize(n=sum(population)) %>%
+  
+  #get the values from the total column from dataTotalByAge to make the proportion
+  left_join(dataTotalByAge,by=c("gender","age")) %>%
+  ungroup() %>%
+  transmute(gender=gender,has_married=has_married,age=age,prop=n/total) %>%
+  filter(has_married=="yes") %>%
+  ggplot() + 
+  geom_line(aes(age,prop,color=gender)) + 
+  
+  #Make the graph easier to read by modifying the labels
+  scale_x_continuous(breaks=seq(from=15,to=100,by=5)) +
+  scale_y_continuous(breaks=seq(from=0,to=1,by=0.05)) +
+  theme_bw() +
+  labs(y="proportion of married",title="Marriage Rate by Age",caption="Figure 2.5 Proportion of married individuals for each age by gender")
+```
+
+This graph shows a clear pattern of marriage-rates going up as age goes up, although the values near the end became more nonsensical. The values stop increasing around the 60 age mark.
+
+### 3. Are farmers/fishers stereotypically rednecks?
+We'll first consider if farmers and fishers mostly white males, since that's part of what rednecks are like.
+
+```{r echo=FALSE}
+data %>%
+  
+  #Filter out the data for only the farming/fisher occupation
+  filter(occupation=="Farming-fishing") %>%
+  
+  #we are only interested in the race and gender variable
+  group_by(race,gender) %>%
+  summarize(n = sum(population)) %>%
+  ggplot() + 
+  geom_bar(aes(race,n,fill=gender),stat="identity",position="dodge") + 
+  theme_bw() + 
+  labs(title="Race and Gender of Farmers/Fishers",caption="Figure 3.1 Count of farmers/fishers by race and gender",y="population") + 
+  #rotate x-axis labels so texts wont overlap
+  theme(axis.text.x = element_text(angle=20,hjust=1))
+```
+
+The first part of the redneck stereotype seems to be true. Based on the graph, there's an overwhelming majority of people that are white and male who comprise the workers of farmers and fishers.
+The next part of the redneck stereotype is that they're mostly middle-aged, since young and old people typically won't have the physical ability to handle such hard work. 
+
+```{r echo=FALSE}
+data %>%
+  #Get rid of all the rows that don't have the farming/fishing occupation
+  filter(occupation=="Farming-fishing") %>%
+  group_by(age) %>%
+  summarize(n=sum(population)) %>%
+  #create bins for the ages so it's easier to see trends, and ages with few respondents will be less likely to impact our visualization
+  mutate(age_bin=cut_width(age,5)) %>%
+  group_by(age_bin) %>%
+  summarize(n=mean(n)) %>%
+  ggplot(aes(age_bin,n)) + 
+  #Since age_bin is no longer a continuous variable, we'll use geom_bar() for discrete variables
+  geom_bar(stat="identity") + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle=40,hjust=1)) +
+  labs(x="ages",y="population",title="Ages of Farmers/Fishers",caption="Figure 3.2.1 Distribution of farmers/fishers by age groups")
+```
+
+The data is consistent with my beliefs, where most of the farmers and fisherman fall within the 20-50 age range. There appears to be a spike at the age range of 62.5-67.5. Let's zoom in to see which age is causing that spike.
+
+```{r echo=FALSE}
+data %>%
+  filter(occupation=="Farming-fishing") %>%
+  group_by(age) %>%
+  summarize(n=sum(population)) %>%
+  #Visualize the unusual result with a color
+  ggplot(aes(age,n,color=n>3000000)) + 
+  geom_histogram(stat="identity") + 
+  theme_bw() +
+  labs(x="ages",y="population",title="Ages of Farmers/Fishers",caption="Figure 3.2.2 Modified version of Figure 3.2.1 to zoom in on an unusual value") + 
+  #Use a continuous scale since we're zooming in
+  scale_x_continuous(breaks=seq(from=0,to=100,by=1)) +
+  #zoom into the age_bin that we are interested in seeing
+  coord_cartesian(xlim=c(50,70))
+```
+
+There's an interesting spike in the age of 58. My guess on this is that 58 years ago before 1997, the year this census was taken, America had just begun to participate in World War II, and with the drafting of soldiers, the government needed to provide food supplies to the soldiers, so the government gave farmers incentives to produce more food, and thus those who were born that year had to focus on farming rather than education.
+
+
+Since farmers don't work in the city, and live in rural areas instead for farmland, I'd imagine that they're mostly non-rich, middle to lower income workers. Fisherman probably do live in the cities more, but we don't have enough data to tell them apart.
+
+```{r echo=FALSE}
+data %>%
+  filter(occupation=="Farming-fishing") %>%
+  group_by(occupation,income) %>%
+  summarize(n=sum(population))
+```
+Table 3.3 Income of farmers and fishers
+
+Based on the table, a significantly more number of farmers and fishermen earn less than or equal to 50K than farmers and fisherman who earn more than 50K salary. 
+
+How do farmers/fishers compare with other occupations in education levels?
+We are not interested in those that are never completed highschool, since there are too many education levels to compare to. We'll just focus on the important ones, which are highschool and college graduates.
+
+```{r echo=FALSE}
+
+#Create a values for the total number of population for each occupation
+totalOccupation <- data %>%
+  #we are not interested in non-highschool graduates
+  filter(education_num>8) %>%
+  group_by(occupation) %>%
+  summarize(total=sum(population))
+
+data %>%
+  filter(education_num>8) %>%
+  group_by(education_num,education,occupation) %>%
+  summarize(n=sum(population)) %>%
+  left_join(totalOccupation,by="occupation") %>%
+  ungroup() %>%
+  
+  #create the proportion 
+  transmute(education_num,education,occupation,prop=round(n/total,4)) %>%
+  
+  #we are not interested in the occupations with missing values
+  filter(!is.na(occupation)) %>%
+  ggplot() +
+  geom_bar(aes(occupation,prop,fill=education),stat="identity") + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle=40,hjust=1)) + 
+  labs(title="Occupation and Education",caption="Figure 3.4 Proportion of education levels for each occupation")
+```
+
+Based on our graph, out of high-school graduates, most of farmers/fishers are highschool graduates, some have completed college, and very few have achieved professional college degrees. Compared with other professions, it's about the same. Only professions such as Professional-speciality, executive-managerial, and tech-support differ in that they have relative more people with college degrees.
+
+### 4. Does there exists people with over 50K income with little or no education?
+Let's find out if there exists people with over 50K income, but have graduated from high-school or less
+
+```{r echo=FALSE}
+#Store the data into a variable for easier use in the future
+rich <- data %>%
+  filter(education_num<9,income==">50K")
+head(rich)
+```
+Table 4.1 Existence of people that never graduated, but have a high salary
+
+There certainly exists people that are have salaries over 50k given that they've never entered college. These people are unique since they defy social norms. Now we're interested in finding out what could possibly make them successful. Let's find out what their occupations are, and which occupation contains the most number of people that have over 50k salary but with low education.
+
+```{r echo=FALSE}
+rich %>%
+  group_by(occupation) %>%
+  summarize(n=sum(population)) %>%
+  ggplot(aes(occupation)) + 
+  #The occupations with significant number of people are more than 5,000,000
+  #We would like to distinguish them with a different color
+  geom_bar(aes(occupation,n,color=n>5000000),stat="identity") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle=50,hjust=1)) + 
+  labs(y="count",title="Occupations of People with 50K+ Salary",caption="Figure 4.3 Occupation with the highest number of high-school dropouts but with over 50K salary")
+```
+
+The occupations with the most number of non-college graduates are Craft-repair and transport-moving. It makse sense for craft-repairs and transport-moving jobs to not go to college, since there's not much mental skill required.
+
+Let's find out how these occupations' net capital gain is by measuring their mean and median. We are going to filter out those who've made no investments because it's not meaningful to people who are interested in people who invest.
+```{r echo=FALSE}
+data %>%
+  #we are only interested in the Craft-repair and Transport-moving occupations
+  filter(occupation==c("Craft-repair","Transport-moving")) %>%
+  #We will filterout those who didn't make and investment since they are meaningless to the community of investors
+  filter(capital_gain != 0 | capital_loss != 0) %>%
+  summarize(avg_net_capital_gain = mean(capital_gain-capital_loss),median_net_capital_gain = median(capital_gain-capital_loss))
+```
+Table 4.6
+
+The average net capital gain is extremely high, which is great, but the median net capital gain is only 3103, which is positive, but it's a lot less. This tells us that there are outliers of people who've made great capital gains, and they're the outliers. This could mean that although these people had little education, they are smart enough to know how to make investments.
+
+We now wish to find out if marriage is a factor for these uneducated rich people.
+We will determine the number of each marital status.
+
+```{r echo=FALSE}
+rich %>%
+  #We are interested in their marital status
+  group_by(marital_status) %>%
+  summarize(n=sum(population)) %>%
+  ggplot() + 
+  geom_bar(aes(marital_status,n),stat="identity") + 
+  #Flip the graph so the labels won't overlap
+  coord_flip() + 
+  theme_bw() + 
+  labs(y="Count",title="Uneducated High-Income Marital Status Distribution",caption="Figure 4.7 Distribution of marital status of people who are uneducated but lucky enough to earn more than 50K a year")
+```
+
+Most of the people are married, and very little have never married. My take from this is that these successful people are very attractive to mate with, or perhaps they had great support from their spouses. However, our data is unable to tell whether these people got their salary from their spouses or by themselves.
+
+Now we wish to explore them by their working hours. The data doesn't give us information on their exact salary, so we can't compare working hours by their exact salary, but we could compare it with their education level. I expect that someone who is smarter would spend less time working.
+
+```{r echo=FALSE}
+rich %>%
+  ggplot() + 
+  #Since there's many data points,a and the x and y values are continuous, we can visualize the data with a boxplot
+  geom_boxplot(aes(education_num,hours_per_week,group=education_num)) + 
+  scale_y_continuous(breaks=seq(from=5,to=100,by=5)) + 
+  scale_x_continuous(breaks=seq(from=1,to=8)) +
+  theme_bw() + 
+  labs(caption="Figure 4.8 Education level vs hours worked per week")
+```
+
+Contrary to what I thought, there does not seem to be a trend. The average working hours per week is around 40 for every education level except those with an education level of 2, which are first-graders. They have an average of 45 hours per week. I remain skeptical about some of the data points for hours_per_week because some of them are over 80, and one of them is almost at 100. That doesn't sound physically possible to me, but some people might be exceptionally capable beyond what I could comprehend.
+
+# Conclusion
+
+From exploring the difference between the distribution of males and females in education levels, we've found that there's more males than females in every level of education, but when we factor in a proportion, there's a higher ratio of females in that obtained some college degree than males. The proportion graph also tells us that there's about an equal ratio of males and females for each education level so we can conclude that males and females have about the same intelligence.
+The measurement of intelligence by highest education achieved might not be the best choice. An even better choice would be an IQ test. Therefore if I were to go further into comparing the intelligence between men and women, I'd gather data on the IQ test result of an individual.
+
+Our exploration of marriage rates for men and women tells us that you're more likely to get married as a male than a female. When I was exploring for any differences in native countries, I found that some of the countries didn't have enough respondents to tell the true marriage ratio of that native country, such as the Netherlands, so further data gathering of people from native countries is needed to make a more complete picture about the marriage rate for each native countries. There were also a lack of respondents for people over the age of 80 which caused the data to vary widely in Figure 2.5. More data needs to be collected on the elderly to fix that unusual variation. It also appears that people tend to start getting married as young as 25, and stop getting married around 50 years of age.
+
+Our hypothesis of whether farmers and fishermen are typically rednecks seems to hold true based on our data explorations. They are mostly male, white, middle-aged, low-income, and relatively uneducated compared to some other occupations. However, there might be differences between the occupation of farmers and fisherman. Therefore it would be better if we could redo this data exploration with the ability to tell farmers and fisherman apart.
+
+Lastly, the people that make over 50K but without graduating highschool are found to be mostly craft-repairers and transport-moving people. They are typically married as well, but we can't tell if they're married because of their richness, their luck, or if they get their income mostly from their spouses. If we had data on how much their spouses make as opposed to how much they make, we can find out if they're really lucky hard-workers, or just lucky to have a rich spouse.
